@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
   Select,
@@ -11,39 +10,42 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import useFiltersStore from "@/store/filtersStore";
+import { parseAsString, useQueryState } from "nuqs";
 
 export default function CharacterFilters() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  // Create query states using nuqs
+  const [statusParam, setStatusParam] = useQueryState(
+    "status",
+    parseAsString.withDefault("")
+  );
+  const [genderParam, setGenderParam] = useQueryState(
+    "gender",
+    parseAsString.withDefault("")
+  );
+
+  // Get Zustand store values and setters
   const { status, gender, setStatus, setGender } = useFiltersStore();
 
-  // Sync URL params to store on component mount and when URL changes
+  // Sync URL params to store when URL changes
   useEffect(() => {
-    const statusParam = (searchParams.get("status") as any) || undefined;
-    const genderParam = (searchParams.get("gender") as any) || undefined;
-
-    if (statusParam !== status) setStatus(statusParam);
-    if (genderParam !== gender) setGender(genderParam);
-  }, [searchParams, setStatus, setGender, status, gender]);
+    if (statusParam !== status) setStatus(statusParam as any);
+    if (genderParam !== gender) setGender(genderParam as any);
+  }, [statusParam, genderParam, setStatus, setGender, status, gender]);
 
   const handleStatusChange = (value: string) => {
     // Update store
     setStatus(value as any);
 
-    // Update URL
-    const params = new URLSearchParams(searchParams);
-    params.set("status", value);
-    router.push(`?${params.toString()}`, { scroll: false });
+    // Update URL with nuqs (no need for manual URL manipulation)
+    setStatusParam(value);
   };
 
   const handleGenderChange = (value: string) => {
     // Update store
     setGender(value as any);
 
-    // Update URL
-    const params = new URLSearchParams(searchParams);
-    params.set("gender", value);
-    router.push(`?${params.toString()}`, { scroll: false });
+    // Update URL with nuqs
+    setGenderParam(value);
   };
 
   return (
